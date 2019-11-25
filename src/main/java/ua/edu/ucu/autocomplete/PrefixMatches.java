@@ -1,11 +1,10 @@
 package ua.edu.ucu.autocomplete;
 
 import ua.edu.ucu.tries.RWayTrie;
-import ua.edu.ucu.tries.Trie;
 import ua.edu.ucu.tries.Tuple;
 
-import java.util.Arrays;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 
 /**
@@ -14,7 +13,64 @@ import java.util.Iterator;
  */
 public class PrefixMatches {
 
-    public RWayTrie trie;
+    private RWayTrie trie;
+
+
+    private static class PrefixIterable implements Iterable<String> {
+        private final Iterator<String> wordsIterator;
+        private final int limit;
+
+        PrefixIterable(Iterator<String> newWordsIterator, int newLimit) {
+            wordsIterator = newWordsIterator;
+            limit = newLimit;
+        }
+
+        @Override
+        public Iterator<String> iterator() {
+            return new Iterator<String>() {
+                private int counter = -1;
+                private int maxLength = 0;
+                private boolean hasNextValue = true;
+                private String nextValue;
+
+                @Override
+                public boolean hasNext() {
+                    if (!hasNextValue) {
+                        return false;
+                    }
+                    if (!wordsIterator.hasNext()) {
+                        hasNextValue = false;
+                        return false;
+                    }
+
+                    if (nextValue == null) {
+                        nextValue = wordsIterator.next();
+                        if (nextValue.length() > maxLength) {
+                            maxLength = nextValue.length();
+                            counter += 1;
+                        }
+                    }
+
+                    if (counter < limit) {
+                        return true;
+                    }
+                    hasNextValue = false;
+                    return false;
+                }
+
+                @Override
+                public String next() {
+                    if (hasNext() && nextValue != null && hasNextValue) {
+                        String value = nextValue;
+                        nextValue = null;
+                        return value;
+                    }
+
+                    throw new NoSuchElementException();
+                }
+            };
+        }
+    }
 
     public PrefixMatches(RWayTrie trie) {
         this.trie = trie;
@@ -40,34 +96,13 @@ public class PrefixMatches {
         return trie.wordsWithPrefix(pref);
     }
 
+
     public Iterable<String> wordsWithPrefix(String pref, int k) {
-        Iterator<String> wordsIterator = wordsWithPrefix(pref).iterator();
+        return new PrefixIterable(
+                wordsWithPrefix(pref).iterator(),
+                k
+        );
 
-        return () -> new Iterator<String>() {
-            private int counter = -1;
-            private int maxLength = 0;
-
-            private String nextValue;
-
-            @Override
-            public boolean hasNext() {
-                if (wordsIterator.hasNext()) {
-                    nextValue = wordsIterator.next();
-                    if (nextValue.length() > maxLength) {
-                        maxLength = nextValue.length();
-                        counter += 1;
-                    }
-                    return counter < k;
-                } else {
-                    return false;
-                }
-            }
-
-            @Override
-            public String next() {
-                return nextValue;
-            }
-        };
     }
 
     public int size() {

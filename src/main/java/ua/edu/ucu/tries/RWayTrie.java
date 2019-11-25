@@ -2,18 +2,22 @@ package ua.edu.ucu.tries;
 
 import ua.edu.ucu.utils.Queue;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+
 
 public class RWayTrie implements Trie {
     private Node root;
     private int size = 0;
 
-    private class Node {
-        String data;
-        boolean visited = false;
-        final HashMap<Character, Node> subtree = new HashMap<>();
+    private static class Node {
+        private String data;
+        private boolean visited = false;
+        private final HashMap<Character, Node> subtree = new HashMap<>();
 
-        Node() {}
+        Node() {
+
+        }
 
         void add(Character key, Node value) {
             subtree.put(key, value);
@@ -25,6 +29,26 @@ public class RWayTrie implements Trie {
 
         void remove(Character key) {
             subtree.remove(key);
+        }
+
+        public String getData() {
+            return data;
+        }
+
+        public void setData(String newData) {
+            data = newData;
+        }
+
+        public boolean isVisited() {
+            return visited;
+        }
+
+        public void setVisited(boolean isVisited) {
+            visited = isVisited;
+        }
+
+        public HashMap<Character, Node> getSubtree() {
+            return subtree;
         }
     }
 
@@ -38,31 +62,35 @@ public class RWayTrie implements Trie {
         size += 1;
     }
 
-    private Node add(Node node, Tuple t, int index) { // Change value associated with key if in subtrie rooted at x.
-        if (node == null) node = new Node();
-
-        if (index == t.term.length()) {
-            node.data = t.term;
+    private Node add(Node node, Tuple t, int index) {
+        if (index == t.weight) {
+            node.setData(t.term);
             return node;
         }
 
         char c = t.term.charAt(index);
         node.add(
                 c,
-                add(node.get(c), t, index + 1)
+                add(node.getSubtree().getOrDefault(c, new Node()), t, index + 1)
         );
         return node;
     }
 
     public String get(String word) {
         Node node = get(root, word, 0);
-        if (node == null) return null;
-        return node.data;
+        if (node == null) {
+            return null;
+        }
+        return node.getData();
     }
 
     private Node get(Node node, String word, int index) {
-        if (node == null) return null;
-        if (index == word.length()) return node;
+        if (node == null) {
+            return null;
+        }
+        if (index == word.length()) {
+            return node;
+        }
         char c = word.charAt(index);
         return get(node.get(c), word, index + 1);
     }
@@ -79,20 +107,24 @@ public class RWayTrie implements Trie {
         return wasDeleted[0];
     }
 
-    private Object delete(Node node, String word, int index, boolean[] wasDeleted) {
-        if (node == null) return null;
+    private Object delete(Node node, String word, int index, boolean[] exist) {
+        if (node == null) {
+            return null;
+        }
 
         if (index == word.length()) {
-            wasDeleted[0] = node.data != null;
-            node.data = null;
+            exist[0] = node.getData() != null;
+            node.setData(null);
         } else {
             char c = word.charAt(index);
-            if (delete(node.get(c), word, index + 1, wasDeleted) == null) {
+            if (delete(node.get(c), word, index + 1, exist) == null) {
                 node.remove(c);
             }
         }
 
-        if (node.data != null || !node.subtree.isEmpty()) return node;
+        if (node.getData() != null || !node.getSubtree().isEmpty()) {
+            return node;
+        }
 
         return null;
     }
@@ -104,7 +136,9 @@ public class RWayTrie implements Trie {
 
     @Override
     public Iterable<String> wordsWithPrefix(String pref) {
-        if (pref.length() == 1) return null;
+        if (pref.length() == 1) {
+            return null;
+        }
 
         ArrayList<String> words = new ArrayList<>();
         Queue queue = new Queue();
@@ -116,26 +150,28 @@ public class RWayTrie implements Trie {
         while (!queue.isEmpty()) {
             Node node = (Node) queue.dequeue();
             // save word if possible
-            if (node.data != null) words.add(node.data);
+            if (node.getData() != null) {
+                words.add(node.getData());
+            }
 
-            node.subtree.forEach((key, child) -> {
-                if (!child.visited) {
-                    child.visited = true;
+            node.getSubtree().forEach((key, child) -> {
+                if (!child.isVisited()) {
+                    child.setVisited(true);
                     queue.enqueue(child);
                 }
             });
         }
 
         // mark node back as unvisited
-        markVisited(rootNode, false);
+        markUnvisited(rootNode, false);
 
         return words;
     }
 
-    private void markVisited(Node node, boolean visited) {
-        node.visited = visited;
-        node.subtree.forEach((key, child) -> {
-            markVisited(child, visited);
+    private void markUnvisited(Node node, boolean visited) {
+        node.setVisited(false);
+        node.getSubtree().forEach((key, child) -> {
+            markUnvisited(child, visited);
         });
     }
 

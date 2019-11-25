@@ -5,8 +5,7 @@ import org.junit.Test;
 import ua.edu.ucu.autocomplete.PrefixMatches;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class RWatTriesTest {
 
@@ -29,6 +28,15 @@ public class RWatTriesTest {
         String[] expResult = {"abc", "abce", "abcd", "abcde", "abcdef"};
 
         assertThat(result, containsInAnyOrder(expResult));
+    }
+
+    @Test
+    public void testWordsWithTooSmallPrefix() {
+        String pref = "a";
+
+        Iterable<String> result = trie.wordsWithPrefix(pref);
+
+        assertNull(result);
     }
 
     @Test

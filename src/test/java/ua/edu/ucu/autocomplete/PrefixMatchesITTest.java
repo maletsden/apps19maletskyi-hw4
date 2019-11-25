@@ -9,6 +9,8 @@ import ua.edu.ucu.tries.RWayTrie;
 import ua.edu.ucu.tries.Trie;
 
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  *
@@ -47,16 +49,30 @@ public class PrefixMatchesITTest {
         assertThat(result, containsInAnyOrder(expResult));
     }
 
-    @Test
+    @Test(expected = NoSuchElementException.class)
+    public void testWordsWithPrefixIteratorThrowError() {
+        String pref = "abc";
+        int k = 3;
+
+        Iterator<String> result = pm.wordsWithPrefix(pref, k).iterator();
+
+        while (result.hasNext()) {
+            result.next();
+        }
+
+        result.next();
+    }
+
+    @Test(expected = NoSuchElementException.class)
     public void testWordsWithPrefix_String_and_extraLargeK() {
         String pref = "abc";
         int k = 100;
 
-        Iterable<String> result = pm.wordsWithPrefix(pref, k);
+        Iterator<String> result = pm.wordsWithPrefix(pref, k).iterator();
 
-        String[] expResult = {"abc", "abce", "abcd", "abcde", "abcdef"};
-
-        assertThat(result, containsInAnyOrder(expResult));
+        for (int i = 0; i < k; i++) {
+            result.next();
+        }
     }
 
     @Test
