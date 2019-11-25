@@ -30,16 +30,11 @@ public class PrefixMatches {
             return new Iterator<String>() {
                 private int counter = -1;
                 private int maxLength = 0;
-                private boolean hasNextValue = true;
                 private String nextValue;
 
                 @Override
                 public boolean hasNext() {
-                    if (!hasNextValue) {
-                        return false;
-                    }
                     if (!wordsIterator.hasNext()) {
-                        hasNextValue = false;
                         return false;
                     }
 
@@ -51,16 +46,12 @@ public class PrefixMatches {
                         }
                     }
 
-                    if (counter < limit) {
-                        return true;
-                    }
-                    hasNextValue = false;
-                    return false;
+                    return counter < limit;
                 }
 
                 @Override
                 public String next() {
-                    if (hasNext() && nextValue != null && hasNextValue) {
+                    if (hasNext() && nextValue != null) {
                         String value = nextValue;
                         nextValue = null;
                         return value;
